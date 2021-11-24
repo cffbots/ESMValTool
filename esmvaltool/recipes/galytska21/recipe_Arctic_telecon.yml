@@ -45,7 +45,7 @@ preprocessors:
       target_grid: 1x1
       scheme: linear
     extract_levels:
-      levels: [10000., 7000., 5000., 3000., 2018., 1000.]
+      levels: [10000., 7000., 5000., 3000., 2000., 1000.]
       scheme: nearest
     extract_region:
       start_latitude: 65.
