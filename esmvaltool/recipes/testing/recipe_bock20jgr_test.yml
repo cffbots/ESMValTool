@@ -1,0 +1,320 @@
+# ESMValTool
+# recipe_bock20jgr_test.yml
+---
+documentation:
+
+  title: Test recipe
+
+  description: |
+    Testing features used in the recipes "recipes_bock20jgr_*.yml"
+    * multi-model mean: full  and overlap span
+    * regridding: reference dataset and 2x2
+    * extracting one level
+    * "collecting" diagnostic with ancestors
+    * CMIP3, CMIP5 and CMIP6
+
+  authors:
+    - bock_lisa
+
+  maintainer:
+    - bock_lisa
+
+
+preprocessors:
+
+  clim:
+    regrid:
+      target_grid: 2x2
+      scheme: linear
+    multi_model_statistics:
+      span: overlap
+      statistics: [mean]
+      exclude: [reference_dataset]
+
+
+  clim_ref:
+    regrid:
+      target_grid: reference_dataset
+      scheme: linear
+    multi_model_statistics:
+      span: full
+      statistics: [mean]
+      exclude: [reference_dataset]
+
+
+  pp850:
+    extract_levels:
+      levels: 85000
+      scheme: linear
+    regrid:
+      target_grid: reference_dataset
+      scheme: linear
+    mask_fillvalues:
+      threshold_fraction: 0.95
+
+
+  ppNOLEV1:
+    regrid:
+      target_grid: reference_dataset
+      scheme: linear
+    mask_fillvalues:
+      threshold_fraction: 0.95
+
+
+
+CMIP6_tas: &cmip6_tas
+  - {dataset: AWI-ESM-1-1-LR, grid: gn}
+  - {dataset: CanESM5, grid: gn}
+  - {dataset: CESM2, grid: gn}
+
+
+CMIP5_tas: &cmip5_tas
+  - {dataset: BNU-ESM}
+  - {dataset: CanESM2}
+  - {dataset: MPI-ESM-LR}
+
+
+CMIP3_tas: &cmip3_tas
+  - {dataset: bccr_bcm2_0}
+  - {dataset: cccma_cgcm3_1}
+  - {dataset: giss_aom}
+
+
+diagnostics:
+
+  ######################################################
+  # Anomaly timeseries
+  # - multi-model mean: full span
+  # - regridding: reference dataset
+  # - CMIP3, CMIP5 and CMIP6
+  ######################################################
+
+  fig_1_cmip6: &diag_fig1
+    title: CMIP6 surface temperature anomalies
+    description: CMIP6 timeseries of near-surface temperature anomalies
+    variables:
+      tas: &var_tas_tsline
+        preprocessor: clim_ref
+        reference_dataset: HadCRUT4
+        mip: Amon
+        project: CMIP6
+        exp: historical
+        ensemble: r1i1p1f1
+        grid: gr
+        start_year: 1850
+        end_year: 2014
+        additional_datasets: *cmip6_tas
+    additional_datasets:
+      - {dataset: HadCRUT4, project: OBS, type: ground, version: 1, tier: 2,
+         end_year: 2017}
+    scripts:
+      tsline_anom: &tsline_settings
+        script: bock20jgr/tsline.ncl
+        time_avg: "yearly"
+        ts_anomaly: "anom"
+        ref_start: 1850
+        ref_end: 1900
+        ref_mask: true
+        plot_units: "degC"
+        y_min: -0.5
+        y_max: 1.6
+        volcanoes: true
+        write_stat: true
+        styleset: CMIP6
+
+  fig_1_cmip5:
+    title: CMIP5 surface temperature anomalies
+    description: CMIP5 timeseries of near-surface temperature anomalies
+    variables:
+      tas:
+        <<: *var_tas_tsline
+        project: CMIP5
+        ensemble: r1i1p1
+        start_year: 1850
+        end_year: 2004
+        additional_datasets: *cmip5_tas
+    additional_datasets:
+      - {dataset: HadCRUT4, project: OBS, type: ground, version: 1, tier: 2,
+         end_year: 2017}
+    scripts:
+      tsline_anom:
+        <<: *tsline_settings
+        styleset: CMIP5
+
+  fig_1_cmip3:
+    title: CMIP3 surface temperature anomalies
+    description: CMIP3 timeseries of near-surface temperature anomalies
+    variables:
+      tas:
+        <<: *var_tas_tsline
+        project: CMIP3
+        mip: A1
+        modeling_realm: atm
+        exp: 20c3m
+        frequency: mo
+        ensemble: run1
+        start_year: 1850
+        end_year: 1999
+        additional_datasets: *cmip3_tas
+    additional_datasets:
+      - {dataset: HadCRUT4, project: OBS, type: ground, version: 1, tier: 2,
+         end_year: 2017, mip: Amon}
+    scripts:
+      tsline_anom:
+        <<: *tsline_settings
+        styleset: CMIP3
+
+
+
+  ######################################################
+  # Horizontal map
+  # - multi-model mean: overlap span
+  # - regridding: 2x2
+  # - CMIP6
+  ######################################################
+
+  fig_3_cmip6:
+    title: CMIP6 MMM surface temperature
+    description: CMIP6 multi-model mean and bias of near-surface temperature
+    variables:
+      tas: &var_cmip6_bias
+        preprocessor: clim
+        reference_dataset: ERA5
+        mip: Amon
+        project: CMIP6
+        exp: historical
+        ensemble: r1i1p1f1
+        grid: gr
+        start_year: 2000
+        end_year: 2002
+        additional_datasets: *cmip6_tas
+    additional_datasets:
+      - {dataset: ERA5, project: OBS6, type: reanaly, version: v1, tier: 3}
+    scripts:
+      model_bias: &model_bias_settings
+        script: bock20jgr/model_bias.ncl
+        projection: Robinson
+        timemean: annualclim
+
+
+
+  ######################################################
+  # Perfmetrics
+  # - extracting one level
+  # - regridding: reference_dataset
+  # - CMIP3, CMIP5 + CMIP6
+  # - "collecting" diagnostic with ancestors
+  ######################################################
+
+  clt:
+    title: Calculation of performance metrics (total cloud cover)
+    description: Total cloud cover
+    themes:
+      - clouds
+    realms:
+      - atmos
+    variables:
+      clt:
+        preprocessor: ppNOLEV1
+        reference_dataset: ESACCI-CLOUD
+        alternative_dataset: PATMOS-x
+        mip: Amon
+        project: CMIP5
+        exp: historical
+        ensemble: r1i1p1
+        start_year: 1995
+        end_year: 1999
+    additional_datasets:
+      - {dataset: AWI-ESM-1-1-LR, grid: gn, ensemble: r1i1p1f1, project: CMIP6}
+      - {dataset: CanESM5, grid: gn, ensemble: r1i1p1f1, project: CMIP6}
+      - {dataset: CESM2, grid: gn, ensemble: r1i1p1f1, project: CMIP6}
+      - {dataset: BNU-ESM}
+      - {dataset: CanESM2}
+      - {dataset: MPI-ESM-LR}
+      - {dataset: cccma_cgcm3_1, project: CMIP3, mip: A1, modeling_realm: atm,
+         exp: 20c3m, frequency: mo, ensemble: run1}
+      - {dataset: ipsl_cm4, project: CMIP3, mip: A1,modeling_realm: atm,
+         exp: 20c3m, frequency: mo, ensemble: run1}
+      - {dataset: mpi_echam5, project: CMIP3, mip: A1,modeling_realm: atm,
+         exp: 20c3m, frequency: mo, ensemble: run1}
+      - {dataset: ESACCI-CLOUD, project: OBS, type: sat, version: AVHRR-fv3.0,
+         tier: 2}
+      - {dataset: PATMOS-x, project: OBS, type: sat, version: NOAA, tier: 2}
+    scripts:
+      grading: &grading_settings
+        script: perfmetrics/main.ncl
+        # Plot type ('cycle', 'zonal', 'latlon', 'cycle_latlon', 'cycle_zonal')
+        plot_type: cycle_latlon
+        # Time average ('opt' argument of time_operations.ncl)
+        time_avg: monthlyclim
+        # Region ('global', 'trop', 'nhext', 'shext')
+        region: global
+        # Plot standard deviation ('all', 'none', 'ref_model' or dataset name)
+        plot_stddev: ref_model
+        # Plot legend in a separate file
+        legend_outside: true
+        # Plot style
+        styleset: CMIP5
+        # Calculate grading
+        calc_grading: true
+        # Metric ('RMSD', 'BIAS', taylor')
+        metric: [RMSD]
+        # Normalization ('mean', 'median', 'centered_median', 'none')
+        normalization: [centered_median]
+
+
+
+  ta850:
+    title: Calculation of performance metrics (air temperature)
+    description: Air temperature at 850 hPa global.
+    themes:
+      - phys
+    realms:
+      - atmos
+    variables:
+      ta:
+        preprocessor: pp850
+        reference_dataset: ERA-Interim
+        alternative_dataset: NCEP
+        mip: Amon
+        project: CMIP5
+        exp: historical
+        ensemble: r1i1p1
+        start_year: 1990
+        end_year: 1995
+    additional_datasets:
+      - {dataset: AWI-ESM-1-1-LR, grid: gn, ensemble: r1i1p1f1, project: CMIP6}
+      - {dataset: CanESM5, grid: gn, ensemble: r1i1p1f1, project: CMIP6}
+      - {dataset: CESM2, grid: gn, ensemble: r1i1p1f1, project: CMIP6}
+      - {dataset: BNU-ESM}
+      - {dataset: CanESM2}
+      - {dataset: MPI-ESM-LR}
+      - {dataset: cccma_cgcm3_1, project: CMIP3, mip: A1, modeling_realm: atm,
+         exp: 20c3m, frequency: mo, ensemble: run1}
+      - {dataset: ipsl_cm4, project: CMIP3, mip: A1,modeling_realm: atm,
+         exp: 20c3m, frequency: mo, ensemble: run1}
+      - {dataset: mpi_echam5, project: CMIP3, mip: A1,modeling_realm: atm,
+         exp: 20c3m, frequency: mo, ensemble: run1}
+      - {dataset: ERA-Interim, project: OBS6, type: reanaly,
+         version: 1, tier: 3}
+      - {dataset: NCEP, project: OBS, type: reanaly, version: 1, tier: 2}
+    scripts:
+      grading:
+        <<: *grading_settings
+
+  collect:
+    title: Collection of performance metrics
+    description: Wrapper to collect and plot previously calculated metrics
+    scripts:
+      fig_6_RMSD:
+        script: perfmetrics/collect.ncl
+        ancestors: ['*/grading*']
+        metric: RMSD
+        label_bounds: [-0.5, 0.5]
+        label_scale: 0.1
+        disp_values: false
+        cm_interval: [2, 241]
+        # Sort dataset in alphabetic order (excluding MMM)
+        project_order: ['CMIP3', 'CMIP5', 'CMIP6']
+        # Sort diagnostics in a specific order (name = 'diagnositic'-'region')
+        diag_order: ['ta850-global', 'clt-global']
