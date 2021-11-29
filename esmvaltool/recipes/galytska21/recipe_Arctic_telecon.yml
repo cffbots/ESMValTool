@@ -20,8 +20,8 @@ documentation:
     - esmval
 
 
-datasets:
-  - {dataset: ERA-Interim,  project: OBS6,  type: reanaly,  version: 1,  tier: 3, start_year: 1979, end_year: 1981}
+#datasets:
+#  - {dataset: ERA-Interim,  project: OBS6,  type: reanaly,  version: 1,  tier: 3, start_year: 1979, end_year: 2014}
 
 preprocessors:
   pre_tas:
@@ -46,6 +46,7 @@ preprocessors:
       scheme: linear
     extract_levels:
       levels: [10000., 7000., 5000., 3000., 2000., 1000.]
+#      levels: [10000., 7000., 1000.]
       scheme: nearest
     extract_region:
       start_latitude: 65.
@@ -92,10 +93,71 @@ preprocessors:
     extract_region:
       start_latitude: 45.
       end_latitude: 80.
-      start_longitude: 0.
-      end_longitude: 85.
+      start_longitude: 160.
+      end_longitude: 260.
     area_statistics:
       operator: mean
+
+  bk_ice:
+    anomalies:
+      period: monthly
+    regrid:
+      target_grid: 1x1
+      scheme: linear
+    extract_region:
+      start_latitude: 70.
+      end_latitude: 80.
+      start_longitude: 30.
+      end_longitude: 105.
+#    weighting_landsea_fraction: 
+#      area_type: sea
+#      exclude: ['TaiESM1', 'BCC-ESM1', 'CAMS-CSM1-0', 'CAS-ESM2-0', 'FGOALS-f3-L', 'FGOALS-g3', 'CMCC-CM2-SR5', 'FIO-ESM-2-0', 'INM-CM4-8', 'INM-CM5-0', 'GISS-E2-1-H', 'IPSL-CM6A-LR', 'NorESM2-MM','NESM3']
+    area_statistics:
+      operator: mean
+
+
+  okhotsk_ice:
+    anomalies:
+      period: monthly
+    regrid:
+      target_grid: 1x1
+      scheme: linear
+    extract_region:
+      start_latitude: 50.
+      end_latitude: 60.
+      start_longitude: 140.
+      end_longitude: 160.
+    area_statistics:
+      operator: mean
+
+  pre_hf:
+    regrid:
+      target_grid: 1x1
+      scheme: linear
+    extract_levels:
+      levels: 10000
+      scheme: linear
+    extract_region:
+      start_latitude: 45.
+      end_latitude: 75.
+      start_longitude: 0.
+      end_longitude: 360.
+
+  pre_qbo:
+    extract_levels:
+      levels: 3000
+      scheme: linear
+    regrid:
+      target_grid: 1x1
+      scheme: linear
+    extract_region:
+      start_latitude: -10.
+      end_latitude: 10.
+      start_longitude: 0.
+      end_longitude: 360.
+    area_statistics:
+      operator: mean
+
 
 diagnostics:
 
@@ -110,55 +172,144 @@ diagnostics:
         short_name: tas
         preprocessor: pre_tas  
         mip: Amon      
+        project: CMIP6       
+        exp: historical
+        ensemble: r1i1p1f1
+        start_year: 1979
+        end_year: 1981
+        additional_datasets:
 
-      psl:
-        short_name: psl
-        preprocessor: pressure_sib
-        mip: Amon
+          - {dataset: ERA-Interim,  project: OBS6,  type: reanaly,  version: 1,  tier: 3}
 
-    scripts:
-      test_tas_eg:
-        script: /work/bd0854/b380971/tools4/ESMValTool/esmvaltool/diag_scripts/galytska21/do_nothing.py
-
-  diagnostics2:
-    description: Further test preprocessor to get variables
-    themes:
-       - phys
-    realms:
-      - atmos
-    variables:
-      psl:
+      psl_Ural:
         short_name: psl
         preprocessor: pressure_ural
-        mip: Amon  
-
-      zg:
-        short_name: zg
-        preprocessor: pre_pv
         mip: Amon
+        project: CMIP6       
+        exp: historical
+        ensemble: r1i1p1f1
+        start_year: 1979
+        end_year: 1981
+        additional_datasets:
 
-    scripts:
-      test_tas_eg:
-        script: /work/bd0854/b380971/tools4/ESMValTool/esmvaltool/diag_scripts/galytska21/do_nothing.py
+          - {dataset: ERA-Interim,  project: OBS6,  type: reanaly,  version: 1,  tier: 3}
 
-
-  diagnostics3:
-    description: Further test preprocessor to get variables
-    themes:
-       - phys
-    realms:
-      - atmos
-    variables:
-      psl:
+      psl_Aleut:
         short_name: psl
         preprocessor: pressure_aleut
         mip: Amon  
+        project: CMIP6       
+        exp: historical
+        ensemble: r1i1p1f1
+        start_year: 1979
+        end_year: 1981
+        additional_datasets:
+
+          - {dataset: ERA-Interim,  project: OBS6,  type: reanaly,  version: 1,  tier: 3}
 
       zg:
         short_name: zg
         preprocessor: pre_pv
         mip: Amon
+        project: CMIP6       
+        exp: historical
+        ensemble: r1i1p1f1
+        start_year: 1979
+        end_year: 1981
+        additional_datasets:
 
+          - {dataset: ERA-Interim,  project: OBS6,  type: reanaly,  version: 1,  tier: 3}
+
+      sic_BK:
+        short_name: sic
+        preprocessor: bk_ice
+        mip: Amon
+        project: CMIP6       
+        exp: historical
+        ensemble: r1i1p1f1
+        start_year: 1979
+        end_year: 1981
+        additional_datasets:
+
+          - {dataset: HadISST, project: OBS, mip: OImon, type: reanaly,  version: 1, tier: 2}
+#          - {dataset: CFSR, mip: OImon, type: reanalysis,  tier: 1}
+#/mnt/lustre02/work/bd0854/DATA/ESMValTool2/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v2_OImon_sic_*.nc
+
+      sic_Okhotsk:
+        short_name: sic
+        preprocessor: okhotsk_ice
+        mip: Amon
+        project: CMIP6       
+        exp: historical
+        ensemble: r1i1p1f1
+        start_year: 1979
+        end_year: 1981
+        additional_datasets:
+
+          - {dataset: HadISST, project: OBS, mip: OImon, type: reanaly,  version: 1, tier: 2}
+
+    scripts:
+      test_tas_eg:
+        script: /work/bd0854/b380971/tools4/ESMValTool/esmvaltool/diag_scripts/galytska21/do_nothing.py
+
+  diagnostics_HF:
+    description: Further test preprocessor to get variables
+    themes:
+       - phys
+    realms:
+      - atmos
+    variables:
+      va:
+        short_name: va
+        preprocessor: pre_hf        
+        project: CMIP6       
+        mip: Amon
+        exp: historical
+        ensemble: r1i1p1f1
+        start_year: 1979
+        end_year: 1981
+        additional_datasets:
+          - {dataset: ERA-Interim,  project: OBS6,  type: reanaly,  version: 1,  tier: 3}
+
+      ta:
+        short_name: ta
+        preprocessor: pre_hf         
+        project: CMIP6       
+        mip: Amon
+        exp: historical
+        ensemble: r1i1p1f1
+        start_year: 1979
+        end_year: 1981
+        additional_datasets:
+          - {dataset: ERA-Interim,  project: OBS6,  type: reanaly,  version: 1,  tier: 3}
+
+
+    scripts:
+      test_tas_eg:
+        script: /work/bd0854/b380971/tools4/ESMValTool/esmvaltool/diag_scripts/galytska21/do_nothing.py
+
+
+  diagnostics_qbo:
+    description: Further test preprocessor to get variables
+    themes:
+       - phys
+    realms:
+      - atmos
+    variables:
+
+      qbo:
+        short_name: ua
+        preprocessor: pre_qbo
+        project: CMIP6       
+        mip: Amon
+        exp: historical
+        ensemble: r1i1p1f1
+        start_year: 1979
+        end_year: 1981
+        additional_datasets:
+
+          - {dataset: ERA-Interim,  project: OBS6,  type: reanaly,  version: 1,  tier: 3}
+         
     scripts:
       test_tas_eg:
         script: /work/bd0854/b380971/tools4/ESMValTool/esmvaltool/diag_scripts/galytska21/do_nothing.py
@@ -170,20 +321,38 @@ diagnostics:
       ts:
         short_name: ts
         mip: Amon
+        start_year: 1979
+        end_year: 1981
+        additional_datasets:
+
+          - {dataset: ERA-Interim,  project: OBS6,  type: reanaly,  version: 1,  tier: 3}
 
       tas:
         short_name: tas
         mip: Amon
+        start_year: 1979
+        end_year: 1981
+        additional_datasets:
+
+          - {dataset: ERA-Interim,  project: OBS6,  type: reanaly,  version: 1,  tier: 3}
 
       pr:
         short_name: pr
         mip: Amon
+        start_year: 1979
+        end_year: 1981
+        additional_datasets:
 
+          - {dataset: ERA-Interim,  project: OBS6,  type: reanaly,  version: 1,  tier: 3}
 
       psl:
         short name: psl
         mip: Amon
+        start_year: 1979
+        end_year: 1981
+        additional_datasets:
 
+          - {dataset: ERA-Interim,  project: OBS6,  type: reanaly,  version: 1,  tier: 3}
 
     scripts:
       cvdp:
