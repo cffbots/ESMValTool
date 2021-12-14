@@ -1,0 +1,72 @@
+# ESMValTool
+# recipe_BK_ice.yml
+---
+documentation:
+  description: |
+    First recipe of EG in Arctic-midlatitude teleconnections.
+
+  title: Recipe that runs an example empty diagnostic written in Python.
+
+  authors:
+    - galytska_evgenia
+
+  maintainer:
+    - galytska_evgenia
+
+  references:
+    - acknow_project
+
+  projects:
+    - esmval
+
+
+#datasets:
+#  - {dataset: ERA-Interim,  project: OBS6,  type: reanaly,  version: 1,  tier: 3, start_year: 1979, end_year: 2014}
+
+preprocessors:
+
+  bk_ice:
+    anomalies:
+      period: monthly
+#    regrid:
+#      target_grid: 1x1
+#      scheme: linear
+    extract_region:
+      start_latitude: 70.
+      end_latitude: 80.
+      start_longitude: 30.
+      end_longitude: 105.
+#    weighting_landsea_fraction: 
+#      area_type: sea
+#      exclude: ['TaiESM1', 'BCC-ESM1', 'CAMS-CSM1-0', 'CAS-ESM2-0', 'FGOALS-f3-L', 'FGOALS-g3', 'CMCC-CM2-SR5', 'FIO-ESM-2-0', 'INM-CM4-8', 'INM-CM5-0', 'GISS-E2-1-H', 'IPSL-CM6A-LR', 'NorESM2-MM','NESM3']
+    area_statistics:
+      operator: mean
+
+
+ 
+diagnostics:
+
+  diagnostic_ice:
+    description: Further test preprocessor to get variables
+    themes:
+       - phys
+    realms:
+      - atmos
+    variables:
+      sic_BK:
+        short_name: sic
+        preprocessor: bk_ice
+        mip: Amon
+        project: CMIP6       
+        exp: historical
+        ensemble: r1i1p1f1
+        additional_datasets:
+
+#          - {dataset: OSI-450-nh, project: OBS, mip: OImon, type: reanaly,  version: v2, tier: 2, start_year: 1979, end_year: 2015}
+          - {dataset: HadISST, project: OBS, mip: OImon, type: reanaly,  version: 1, tier: 2, start_year: 1979, end_year: 2020}
+#          - {dataset: CFSR, mip: OImon, type: reanalysis,  tier: 1}
+
+    scripts:
+      test_tas_eg:
+        script: /work/bd0854/b380971/tools4/ESMValTool/esmvaltool/diag_scripts/galytska21/do_nothing.py
+
