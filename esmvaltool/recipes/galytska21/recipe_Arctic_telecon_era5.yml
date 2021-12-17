@@ -1,0 +1,239 @@
+# ESMValTool
+# recipe_Arctic_telecon_era5.yml
+---
+documentation:
+  description: |
+    First recipe of EG in Arctic-midlatitude teleconnections.
+
+  title: Recipe that runs an example empty diagnostic written in Python.
+
+  authors:
+    - galytska_evgenia
+
+  maintainer:
+    - galytska_evgenia
+
+  references:
+    - acknow_project
+
+  projects:
+    - esmval
+
+datasets:
+
+  - {dataset: ERA5, project: native6, type: reanaly, version: 1, tier: 3, start_year: 1979, end_year: 2018}
+#  - {dataset: ERA-Interim, project: OBS6, type: reanaly, version: 1, tier: 3, start_year: 1979, end_year: 2018}
+
+preprocessors:
+
+  pre_tas:
+    anomalies:
+      period: monthly
+    regrid:
+      target_grid: 1x1
+      scheme: linear
+    extract_region:
+      start_latitude: 65.
+      end_latitude: 90.
+      start_longitude: 0.
+      end_longitude: 360.
+    area_statistics:
+      operator: mean
+
+  heat_flux:
+    extract_levels:
+      levels: 10000
+      scheme: linear
+    extract_region:
+      start_latitude: 45.
+      end_latitude: 75.
+      start_longitude: 0.
+      end_longitude: 360.
+
+  pv:
+    anomalies:
+      period: monthly
+    regrid:
+      target_grid: 1x1
+      scheme: linear
+    extract_levels:
+      levels: [10000., 7000., 5000., 3000., 2000., 1000.]
+      scheme: linear
+    extract_region:
+      start_latitude: 65.
+      end_latitude: 90.
+      start_longitude: 0.
+      end_longitude: 360.
+    area_statistics:
+      operator: mean
+
+  pressure_sib:
+    anomalies:
+      period: monthly
+    regrid:
+      target_grid: 1x1
+      scheme: linear
+    extract_region:
+      start_latitude: 40.
+      end_latitude: 65.
+      start_longitude: 85.
+      end_longitude: 120.
+    area_statistics:
+      operator: mean
+
+  pressure_ural:
+    anomalies:
+      period: monthly
+    regrid:
+      target_grid: 1x1
+      scheme: linear
+    extract_region:
+      start_latitude: 45.
+      end_latitude: 70.
+      start_longitude: 40.
+      end_longitude: 85.
+    area_statistics:
+      operator: mean
+
+  pressure_aleut:
+    anomalies:
+      period: monthly
+    regrid:
+      target_grid: 1x1
+      scheme: linear
+    extract_region:
+      start_latitude: 45.
+      end_latitude: 80.
+      start_longitude: 160.
+      end_longitude: 260.
+    area_statistics:
+      operator: mean
+ 
+  qbo:
+    extract_levels:
+      levels: 3000
+      scheme: linear
+    regrid:
+      target_grid: 1x1
+      scheme: linear
+    extract_region:
+      start_latitude: -10.
+      end_latitude: 10.
+      start_longitude: 0.
+      end_longitude: 360.
+    area_statistics:
+      operator: mean
+
+
+diagnostics:
+
+  diagnostics_general:
+    description: Test preprocessor to get variables
+    themes:
+       - phys
+    realms:
+      - atmos
+    variables:
+      tas:
+        short_name: tas
+        preprocessor: pre_tas  
+        mip: Amon      
+        project: CMIP6       
+        exp: historical
+        ensemble: r1i1p1f1
+
+      zg:
+        short_name: zg
+        preprocessor: pv
+        mip: Amon
+        project: CMIP6       
+        exp: historical
+        ensemble: r1i1p1f1
+ 
+      psl_Ural:
+        short_name: psl
+        preprocessor: pressure_ural
+        mip: Amon
+        project: CMIP6       
+        exp: historical
+        ensemble: r1i1p1f1
+
+    scripts:
+      rename:
+        script: cmorizers/era5.py
+
+  diagnostics_Sib:
+    description: Test preprocessor to get variables
+    themes:
+       - phys
+    realms:
+      - atmos
+    variables:
+      psl_Sib:
+        short_name: psl
+        preprocessor: pressure_sib
+        mip: Amon
+        project: CMIP6       
+        exp: historical
+        ensemble: r1i1p1f1
+    scripts:
+      rename:
+        script: cmorizers/era5.py
+
+  diagnostics_Aleut:
+    description: Test preprocessor to get variables
+    themes:
+       - phys
+    realms:
+      - atmos
+    variables:
+      psl_Aleut:
+        short_name: psl
+        preprocessor: pressure_aleut
+        mip: Amon  
+        project: CMIP6       
+        exp: historical
+        ensemble: r1i1p1f1
+    scripts:
+      rename:
+        script: cmorizers/era5.py
+
+  diagnostics_for_HF:
+    description: Get variables to later calculate HF and CMORize monthly ERA5 data
+
+    variables:
+      va:
+        preprocessor: heat_flux
+        mip: Amon
+        era5_name: v_component_of_wind
+        era5_freq: monthly
+
+      ta: 
+        preprocessor: heat_flux
+        mip: Amon
+        era5_name: temperature
+        era5_freq: monthly
+  
+    scripts:
+      rename:
+        script: cmorizers/era5.py
+
+  diagnostics_qbo:
+    description: Further test preprocessor to get variables
+    themes:
+       - phys
+    realms:
+      - atmos
+    variables:
+
+      qbo:
+        short_name: ua
+        preprocessor: qbo
+        project: CMIP6       
+        mip: Amon
+        exp: historical
+        ensemble: r1i1p1f1
+         
+    scripts:
+      rename:
+        script: cmorizers/era5.py
