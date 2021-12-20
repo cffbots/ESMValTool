@@ -50,7 +50,8 @@ def _plot_time_series(cfg, cube, dataset):
     # local_path = os.path.join(root_dir, out_path)
     # but one can use the already defined esmvaltool output paths
     local_path = cfg['plot_dir']
-
+    
+#    save_data('ERA5_PV', cfg, cube)
     # do the plotting dance
     plt.plot(cube.data, label=dataset)
     plt.xlabel('Time (months)')
@@ -70,28 +71,7 @@ def _plot_time_series(cfg, cube, dataset):
 def run_my_diagnostic(cfg):
     """
     Simple example of a diagnostic.
-
-    This is a basic (and rather esotherical) diagnostic that firstly
-    loads the needed model data as iris cubes, performs a difference between
-    values at ground level and first vertical level, then squares the
-    result.
-
-    Before plotting, we grab the squared result (not all operations on cubes)
-    and apply an area average on it. This is a useful example of how to use
-    standard esmvalcore.preprocessor functionality within a diagnostic, and
-    especially after a certain (custom) diagnostic has been run and the user
-    needs to perform an operation that is already part of the preprocessor
-    standard library of functions.
-
-    The user will implement their own (custom) diagnostics, but this
-    example shows that once the preprocessor has finished a whole lot of
-    user-specific metrics can be computed as part of the diagnostic,
-    and then plotted in various manners.
-
-    Arguments:
-        cfg - nested dictionary of metadata
-
-    Returns:
+       Returns:
         string; runs the user diagnostic
 
     """
@@ -107,27 +87,14 @@ def run_my_diagnostic(cfg):
         # load the cube from data files only
         # using a single variable here so just grab the first (and only)
         # list element
-#        cube = iris.load_cube(value[0]['filename'])
-        tas_Arctic = iris.load_cube(value[0]['filename'])
-        psl_Sib = iris.load_cube(value[1]['filename'])
-        # the first data analysis bit: simple cube difference:
-        # perform a difference between ground and first levels
-#        diff_cube = cube[:, 0, :, :] - cube[:, 1, :, :]
-        # square the difference'd cube just for fun
-#        squared_cube = diff_cube ** 2.
-
+        cube = iris.load_cube(value[0]['filename'])
+        pv = cube.collapsed('air_pressure', iris.analysis.MEAN).data
+        pv_fin = pv*-1
+#        tas = iris.load_cube(value[1]['filename'])
         # the second data analysis bit (slightly more advanced):
-        # compute an area average over the squared cube
-        # to apply the area average use a preprocessor function
-        # rather than writing your own function
-        area_avg_tas = area_statistics(tas_Arctic, 'mean')
-        area_avg_psl = area_statistics(psl_Sib, 'mean')
-        # finalize your analysis by plotting a time series of the
-        # diffed, squared and area averaged cube; call the plot function:
-        _plot_time_series(cfg, area_avg_tas, key)
-        _plot_time_series(cfg, area_avg_psl, key)
-         
-#        save_data
+
+        _plot_time_series(cfg, pv_fin, key)
+#        _plot_time_series(cfg, tas, key)
 
     # that's it, we're done!
     return 'I am done with my first ESMValTool diagnostic!'
