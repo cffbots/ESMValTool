@@ -1,0 +1,77 @@
+# ESMValTool
+# recipe_Arctic_telecon_era5_pv.yml
+---
+documentation:
+  description: |
+    First recipe of EG in Arctic-midlatitude teleconnections.
+
+  title: Recipe that runs an example empty diagnostic written in Python.
+
+  authors:
+    - galytska_evgenia
+
+  maintainer:
+    - galytska_evgenia
+
+  references:
+    - acknow_project
+
+  projects:
+    - esmval
+
+datasets:
+
+  - {dataset: ERA5, project: native6, type: reanaly, version: 1, tier: 3, start_year: 1979, end_year: 1982}
+
+preprocessors:
+
+  pv:
+    anomalies:
+      period: monthly
+    regrid:
+      target_grid: 1x1
+      scheme: linear
+    extract_region:
+      start_latitude: 65.
+      end_latitude: 90.
+      start_longitude: 0.
+      end_longitude: 360.
+#    depth_integration:
+    extract_levels:
+      levels: [10000., 7000., 5000., 3000., 2000., 1000.]
+      scheme: linear
+#      scheme: linear_horizontal_extrapolate_vertical
+
+    area_statistics:
+      operator: mean
+#    volume_statistics:
+#      operator: mean
+#    extract_volume:
+#      z_min: 10000.
+#      z_max: 1000.
+#    volume_statistics:
+#      operator: mean
+
+
+diagnostics:
+
+  diagnostics_general:
+    description: Test preprocessor to get variables
+    themes:
+       - phys
+    realms:
+      - atmos
+    variables:
+      zg:
+        short_name: zg
+        preprocessor: pv
+        mip: Amon
+        project: CMIP6       
+        exp: historical
+        ensemble: r1i1p1f1
+         
+    scripts:
+      test:
+        script: examples/my_little_diagnostic_EG.py
+#        script: examples/diagnostic.py
+
