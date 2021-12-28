@@ -22,11 +22,12 @@ import os
 # to manipulate iris cubes
 import iris
 import matplotlib.pyplot as plt
+import numpy as np
 
 # import internal esmvaltool modules here
 from esmvaltool.diag_scripts.shared import group_metadata, run_diagnostic, save_data
 from esmvalcore.preprocessor import area_statistics
-
+from esmvaltool.diag_scripts.shared._base import get_diagnostic_filename
 
 def _plot_time_series(cfg, cube, dataset):
     """
@@ -50,6 +51,7 @@ def _plot_time_series(cfg, cube, dataset):
     # local_path = os.path.join(root_dir, out_path)
     # but one can use the already defined esmvaltool output paths
     local_path = cfg['plot_dir']
+    save_path = cfg['work_dir']
     
 #    save_data('ERA5_PV', cfg, cube)
     # do the plotting dance
@@ -81,20 +83,54 @@ def run_my_diagnostic(cfg):
     # keyed on datasets e.g. dict = {'MPI-ESM-LR': [var1, var2...]}
     # where var1, var2 are dicts holding all needed information per variable
     my_files_dict = group_metadata(cfg['input_data'].values(), 'dataset')
+#    print ("DICTIONARY", my_files_dict)
 
     # iterate over key(dataset) and values(list of vars)
+#    for key, value in my_files_dict.items():
+#        if key == "ERA5":
     for key, value in my_files_dict.items():
-        # load the cube from data files only
-        # using a single variable here so just grab the first (and only)
-        # list element
-        cube = iris.load_cube(value[0]['filename'])
-        pv = cube.collapsed('air_pressure', iris.analysis.MEAN).data
-        pv_fin = pv*-1
-#        tas = iris.load_cube(value[1]['filename'])
-        # the second data analysis bit (slightly more advanced):
+        diagnostic_file = get_diagnostic_filename(key, cfg)
+        if key == "ERA5":
+            for item in value: 
+                if item['preprocessor'] == 'pv':
+                    pv = iris.load_cube(item['filename'])
+                    pv = pv.collapsed('air_pressure', iris.analysis.MEAN)
+                    pv.data *=-1
+                    pv.var_name = 'PV'
+                elif item['preprocessor'] == 'pre_tas':
+                    tas = iris.load_cube(item['filename'])
+                    tas.var_name = 'Arctic_temperature'
+                elif item['preprocessor'] == 'qbo':
+                    qbo = iris.load_cube(item['filename'])
+                    qbo.var_name = 'QBO'
+                elif item['preprocessor'] == 'pressure_ural':
+                    psl_Ural = iris.load_cube(item['filename'])
+                    psl_Ural.var_name = 'Psl_Ural'
+                elif item['preprocessor'] =='pressure_sib':
+                    psl_Sib = iris.load_cube(item['filename'])
+                    psl_Sib.var_name = 'Psl_Sib'
+                elif item['preprocessor'] =='pressure_aleut':
+                    psl_Aleut = iris.load_cube(item['filename'])
+                    psl_Aleut.var_name = 'Psl_Aleut'
+                elif item['preprocessor'] =='zonal_wind':
+                    zon_wind = iris.load_cube(item['filename'])
+                    zon_wind.var_name = 'zonal_wind'
+            cube_list = iris.cube.CubeList([pv, tas, qbo, psl_Ural, psl_Sib, psl_Aleut, zon_wind])
+            iris.save(cube_list, diagnostic_file)
+        else:
+            for item in value: 
+                if item['preprocessor'] == 'bk_ice':
+                    sic_BK = iris.load_cube(item['filename'])
+                    sic_BK.var_name = 'BK_sic'
+                elif item['preprocessor'] == 'ok_ice':
+                    sic_Ok = iris.load_cube(item['filename'])
+                    sic_Ok.var_name = 'Ok_sic'
+            cube_list = iris.cube.CubeList([sic_BK, sic_Ok])
+            iris.save(cube_list, diagnostic_file)
 
-        _plot_time_series(cfg, pv_fin, key)
-#        _plot_time_series(cfg, tas, key)
+#        _plot_time_series(cfg, pv_fin, key)
+
+
 
     # that's it, we're done!
     return 'I am done with my first ESMValTool diagnostic!'
